@@ -1,0 +1,75 @@
+---
+title: "PCA and K Means"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(cluster)
+library(factoextra)
+```
+
+## Instruction
+
+Dataset: Iris
+Task: 
+
+Doing the PCA so that it reduces Iris data to only 2 columns.
+Then, doing K-Means Clustering from the successful Iris data
+reduced. After that, answering the 3 questions below:
+
+Question:
+a. What are values of the eigenvalue 1 and eigenvalue 2 of the Iris dataset?
+b. How much information can still be 'explained' by the reduced data?
+c. Find the optimal 'k' value based on the Elbow and Silhouette method.Is the value of k = 3 still the best 'k' value?
+
+```{r}
+# Import data iris
+data(iris)
+
+# Create new data frame without feature target
+df <- cbind(iris$Sepal.Length, iris$Sepal.Width, iris$Petal.Length, iris$Petal.Width)
+```
+
+```{r}
+# Create PCA
+pca_iris = prcomp(df, center = TRUE, scale = TRUE)
+```
+
+```{r}
+# Checking the summary of PCA model for decided the eigenvalue 1 and 2
+summary(pca_iris)
+```
+
+```{r}
+# To find the eigenvalues of the PCA, we can square the 'standard deviation'
+pca_iris$sdev^2
+```
+
+```{r}
+# Reduce the iris data to only 2 columns
+iris_transform = as.data.frame(-pca_iris$x[,1:2])
+iris_transform
+```
+
+```{r}
+# Do a k-means evaluation of iris_transform
+fviz_nbclust(iris_transform, kmeans, method = 'wss')
+fviz_nbclust(iris_transform, kmeans, method = 'silhouette')
+```
+
+```{r}
+# Choose the number K that you think is the most optimal
+k = 2
+  
+# Visualize K-Means clustering on the reduced Iris data
+kmeans_iris = kmeans(iris_transform, centers = k, nstart = 50)
+fviz_cluster(kmeans_iris, data = iris_transform)
+```
+
+Answers:
+a. Eigenvalue 1: 2.91849782 Eigenvalue 2: 0.91403047
+b. If we only choose PC1, we are still able to explain 72.9% of the data spread. If we choose PC1 and PC2, we are still able to explain 95.8% of the data spread
+c. The optimal K value = 2, the best K value is 2 because if we choose 3, it is no longer in the elbow and a normal decrease is seen (increasing the number of clusters is no longer significant in reducing WSS) after k = 2 and if we compare the results k = 2 with k = 3, the results tend to be close to or similar to k = 3 for k = 2, so it is better to combine them into k = 2 because there is no significant difference
